@@ -29,7 +29,6 @@ def p_crd(D):  # prawdopodobienstwo smierci komorki nowotowrowej w zwiazku z rad
 
 def pom(a, b, c, zasieg):  # zwraca położenie nowopowstałej komórki
     tab = [[], [], []]  # tab to tablica tablic zawierająca w kolejnych elementach kolejne wartości współrzędnej
-
     xx = range(max(a - math.ceil(zasieg), 0), min(n, a + math.ceil(zasieg)))
     yy = range(max(b - math.ceil(zasieg), 0), min(n, b + math.ceil(zasieg)))
     zz = range(max(c - math.ceil(zasieg), 0), min(n, c + math.ceil(zasieg)))
@@ -57,7 +56,7 @@ def rozmnazanie(a, b, c, zasieg):
         organizm[x][y][z].wiek = 0
 
 
-def inicjalizacja():
+def inicjalizacja(organizm):
     for x in range(n):
         for y in range(n):
             for z in range(n):
@@ -77,34 +76,101 @@ def inicjalizacja():
                     organizm[x][y][z].status = "sciana"
 
 
-n = 15
-d = 0.5
-zasieg = 3
-k = 10
+def sym(K, D, zasieg, n, organizm):
+    inicjalizacja(organizm)
+    d = D
+    zapis = [[], []]
 
-organizm = np.ndarray((n, n, n), dtype=object)
-inicjalizacja()
+    for s in range(K):
+        nowotworowe, martwe = 0, 0
+        for x in range(n):
+            for y in range(n):
+                for z in range(n):
+                    if organizm[x][y][z].status == "nowotworowa":
+                        PHit = p_hit(d)
+                        organizm[x][y][z].wiek += 1
+                        losowa1 = random.random()
+                        nowotworowe += 1
 
-zapis = [[], [], []]
-nowotworowe, martwe, puste = 0, 0, 0
+                        if losowa1 <= PHit:  # trafiona komórka nowotworowa
+                            losowa2 = random.random()
+                            PRD = p_rd(d)  # śmierć w precyzyjnym trafieniu
+                            PCRD = p_crd(d)  # smierci komorki nowotowrowej w zwiazku z radioczuloscia
+                            # PCS = 0.009  # podział komórki nowotworowej
+                            # PCD = 0.0004  # naturalna śmierć komórki nowotworowej
 
-for s in range(k):
-    nowotworowe, martwe, puste = 0, 0, 0
+                            temp1 = PCD + PRD + PCRD
+                            temp2 = temp1 + PCS
+                            if losowa2 <= temp1:
+                                organizm[x][y][z].martwa()
+                            elif losowa2 <= temp2:
+                                rozmnazanie(x, y, z, zasieg)
+
+                        else:
+                            losowa2 = random.random()
+                            if losowa2 <= PCD:
+                                organizm[x][y][z].martwa()
+                            elif losowa2 <= PCD + PCS:
+                                rozmnazanie(x, y, z, zasieg)
+
+                    elif organizm[x][y][z].status == "martwa":
+                        martwe += 1
+                        if organizm[x][y][z].umieranie != 0:
+                            organizm[x][y][z].umieranie -= 1
+
+        zapis[0].append(nowotworowe)
+        zapis[1].append(martwe)
+
+    nowotworowe, martwe = 0, 0
     for x in range(n):
         for y in range(n):
             for z in range(n):
                 if organizm[x][y][z].status == "nowotworowa":
-                    PHit = p_hit(d)
-                    organizm[x][y][z].wiek += 1
-                    losowa1 = random.random()
                     nowotworowe += 1
-                if organizm[x][y][z].status == "martwa":
+                elif organizm[x][y][z].status == "martwa":
                     martwe += 1
 
     zapis[0].append(nowotworowe)
     zapis[1].append(martwe)
-    zapis[2].append(puste)
 
-plt.plot(zapis[0])
-plt.plot(zapis[1])
-plt.show()
+    return zapis
+
+
+n = 30
+zasieg = 3
+k = 1
+
+dawki = [0, 0.2, 0.5, 0.7, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6]
+data = [[], []]
+"""
+for aa in dawki:
+    organizm = np.ndarray((n, n, n), dtype=object)
+    zapis = sym(k, aa, zasieg, n, organizm)
+    data[0].append(aa)
+    data[1].append(zapis[0][len(zapis)-1])
+    print(aa, zapis[0][len(zapis)-1])
+
+    t = "dawka (jeden krok)\tżywe komórki\n"
+    for x in range(len(data[0])):
+        t = t + str(data[0][x]) + "\t" + str(data[1][x]) + "\n"
+    with open("jeden krok.txt", 'w') as file:
+        file.write(t)
+"""
+# dawki = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 2.5]
+dawki = [0.5]
+n = 30
+zasieg = 3
+k = 60
+
+for aa in dawki:
+    daw = []
+    organizm = np.ndarray((n, n, n), dtype=object)
+    zapis = sym(k, aa, zasieg, n, organizm)
+    for x in range(k+1):
+        daw.append(x*aa)
+
+    t = "dawka (suma)\tżywe komórki\n"
+    for x in range(len(daw)):
+        t = t + str(daw[x]) + "\t" + str(zapis[0][x]) + "\n"
+    with open("dawka.txt", 'w') as file:
+        file.write(t)
