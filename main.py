@@ -96,8 +96,8 @@ def sym(K, D, zasieg, n, organizm):
                             losowa2 = random.random()
                             PRD = p_rd(d)  # śmierć w precyzyjnym trafieniu
                             PCRD = p_crd(d)  # smierci komorki nowotowrowej w zwiazku z radioczuloscia
-                            # PCS = 0.009  # podział komórki nowotworowej
-                            # PCD = 0.0004  # naturalna śmierć komórki nowotworowej
+                            # PCS = 0.009 # podział komórki nowotworowej
+                            # PCD = 0.0004 # naturalna śmierć komórki nowotworowej
 
                             temp1 = PCD + PRD + PCRD
                             temp2 = temp1 + PCS
@@ -136,41 +136,60 @@ def sym(K, D, zasieg, n, organizm):
     return zapis
 
 
-n = 30
+n = 32
 zasieg = 3
 k = 1
 
 dawki = [0, 0.2, 0.5, 0.7, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6]
 data = [[], []]
-"""
+# """
 for aa in dawki:
     organizm = np.ndarray((n, n, n), dtype=object)
     zapis = sym(k, aa, zasieg, n, organizm)
     data[0].append(aa)
     data[1].append(zapis[0][len(zapis)-1])
-    print(aa, zapis[0][len(zapis)-1])
+
+    losowa2 = random.random()
+    PRD = p_rd(aa)  # śmierć w precyzyjnym trafieniu
+    PCRD = p_crd(aa)  # smierci komorki nowotowrowej w zwiazku z radioczuloscia
+    PHit = p_hit(aa)
+    PCS = 0.009 # podział komórki nowotworowej
+    PCD = 0.0004 # naturalna śmierć komórki nowotworowej
+
+    temp1 = PCD + PRD + PCRD
+    temp2 = temp1 + PCS
+
+    print(PHit, PRD, PCRD, PCS, PCD, temp1, PHit*temp1, temp2)
 
     t = "dawka (jeden krok)\tżywe komórki\n"
     for x in range(len(data[0])):
         t = t + str(data[0][x]) + "\t" + str(data[1][x]) + "\n"
     with open("jeden krok.txt", 'w') as file:
         file.write(t)
+# """
+
 """
-# dawki = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 2.5]
-dawki = [0.5]
-n = 30
+dawki = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 2.5]
+n = 32
 zasieg = 3
-k = 60
+k = int(6 / dawki[0]) + 1
 
-for aa in dawki:
-    daw = []
+nn = np.zeros((len(dawki)*2, k))
+
+for aa in range(len(dawki)):
     organizm = np.ndarray((n, n, n), dtype=object)
-    zapis = sym(k, aa, zasieg, n, organizm)
-    for x in range(k+1):
-        daw.append(x*aa)
+    kk = int(6 / dawki[aa])
+    zapis = sym(kk, dawki[aa], zasieg, n, organizm)
 
-    t = "dawka (suma)\tżywe komórki\n"
-    for x in range(len(daw)):
-        t = t + str(daw[x]) + "\t" + str(zapis[0][x]) + "\n"
-    with open("dawka.txt", 'w') as file:
-        file.write(t)
+    for x in range(len(zapis[0])):
+        nn[aa * 2, x] = x*dawki[aa]
+        nn[aa * 2 + 1, x] = zapis[0][x]
+
+t = ""
+for x in range(k):
+    for y in range(len(dawki)*2):
+        t = t + str(nn[y][x]) + "\t"
+    t = t + "\n"
+with open("dawka.txt", 'w') as file:
+    file.write(t)
+"""
